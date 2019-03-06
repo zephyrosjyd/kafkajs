@@ -149,4 +149,42 @@ systemd:
         ExecStop=/usr/bin/docker stop zookeeper
 
         [Install]
+        WantedBy=multi-user.
+
+    - name: websockify.service
+      enable: true
+      contents: |
+        [Unit]
+        Description=websockify
+        After=docker.service
+        After=kafkajs-demo-network.service
+        Requires=docker.service
+        Requires=kafkajs-demo-network.service
+        Requires=kafka.service
+
+        [Service]
+        KillMode=none
+        User=core
+        Restart=always
+        RestartSec=5min
+        TimeoutSec=5min
+
+        ExecStartPre=-/usr/bin/docker kill websockify
+        ExecStartPre=-/usr/bin/docker rm websockify
+        ExecStartPre=/usr/bin/docker pull nevon/websockify:0163e4060bf88af5bd5d8e3bfae21a43a04df7ab
+        ExecStart=/usr/bin/docker run \
+          --rm \
+          --publish 9090:80 \
+          --publish 9091:443 \
+          --name websockify \
+          --network=kafkajs-demo \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v /home/core/tokens.conf:/opt/websockify/config/tokens.conf \
+          nevon/websockify:0163e4060bf88af5bd5d8e3bfae21a43a04df7ab \
+          --token-plugin=ReadOnlyTokenFile \
+          --token-source=/opt/websockify/config/tokens.conf \
+          80
+        ExecStop=/usr/bin/docker stop websockify
+
+        [Install]
         WantedBy=multi-user.target

@@ -21,7 +21,6 @@ resource "digitalocean_droplet" "kafkajs-demo" {
   ssh_keys           = [5675195]
   ipv6               = true
   private_networking = true
-  monitoring         = true
 
   user_data = "${data.template_file.user-data.rendered}"
 
@@ -35,5 +34,10 @@ resource "digitalocean_droplet" "kafkajs-demo" {
   provisioner "file" {
     source      = "../testHelpers/kafka/server-jaas.conf"
     destination = "/home/core/server-jaas.conf"
+  }
+
+  provisioner "file" {
+    source      = "./tokens.conf"
+    destination = "/home/core/tokens.conf"
   }
 }
