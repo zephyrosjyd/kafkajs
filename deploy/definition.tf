@@ -18,7 +18,7 @@ resource "digitalocean_droplet" "kafkajs-demo" {
   name               = "kafkajs-demo"
   region             = "${var.do_ams3}"
   size               = "s-2vcpu-4gb"
-  ssh_keys           = [5675195]
+  ssh_keys           = ["84:8a:7d:30:5a:5e:54:d1:92:cb:aa:77:58:95:68:b3"]
   ipv6               = true
   private_networking = true
 

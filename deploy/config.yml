@@ -58,6 +58,34 @@ systemd:
         ExecStart=/usr/sbin/mkswap /var/vm/swapfile1
         RemainAfterExit=true
 
+    - name: do-agent.service
+      enable: true
+      contents: |
+        [Unit]
+        Description=DigitalOcean monitoring agent
+        After=docker.service
+        Requires=docker.service
+
+        [Service]
+        KillMode=none
+        User=core
+        Restart=always
+        RestartSec=5min
+        TimeoutSec=5min
+
+        ExecStartPre=-/usr/bin/docker kill do-agent
+        ExecStartPre=-/usr/bin/docker rm do-agent
+        ExecStartPre=/usr/bin/docker pull digitalocean/do-agent:1
+        ExecStart=/usr/bin/docker run \
+          -v /proc:/host/proc:ro \
+          -v /sys:/host/sys:ro \
+          --name do-agent \
+          digitalocean/do-agent:1
+        ExecStop=/usr/bin/docker stop do-agent
+
+        [Install]
+        WantedBy=multi-user.targett
+
     - name: kafkajs-demo-network.service
       enable: true
       contents: |
