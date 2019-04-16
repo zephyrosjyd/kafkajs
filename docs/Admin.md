@@ -67,8 +67,12 @@ delete.topic.enable=true
 
 ## <a name="get-topic-metadata"></a> Get topic metadata
 
+Deprecated, see [Fetch topic metadata](#fetch-topic-metadata)
+
+## <a name="fetch-topic-metadata"></a> Fetch topic metadata
+
 ```javascript
-await admin.getTopicMetadata({ topics: <Array<String> })
+await admin.fetchTopicMetadata({ topics: <Array<String> })
 ```
 
 `TopicsMetadata` structure:
@@ -102,11 +106,24 @@ await admin.getTopicMetadata({ topics: <Array<String> })
 
 The admin client will throw an exception if any of the provided topics do not already exist.
 
-If you omit the `topics` argument the admin client will fetch metadata for all topics
-of which it is already aware (all the cluster's target topics):
+If you omit the `topics` argument the admin client will fetch metadata for all topics:
 
 ```javascript
-await admin.getTopicMetadata()
+await admin.fetchTopicMetadata()
+```
+
+## <a name="fetch-topic-offsets"></a> Fetch topic offsets
+
+`fetchTopicOffsets` returns most recent offset for a topic.
+
+```javascript
+await admin.fetchTopicOffsets(topic)
+// [
+//   { partition: 0, offset: '31004', high: '31004', low: '421' },
+//   { partition: 1, offset: '54312', high: '54312', low: '3102' },
+//   { partition: 2, offset: '32103', high: '32103', low: '518' },
+//   { partition: 3, offset: '28', high: '28', low: '0' },
+// ]
 ```
 
 ## <a name="fetch-offsets"></a> Fetch consumer group offsets

@@ -2,11 +2,14 @@ const fs = require('fs')
 const ip = require('ip')
 const execa = require('execa')
 const uuid = require('uuid/v4')
+const semver = require('semver')
 const crypto = require('crypto')
 const Cluster = require('../src/cluster')
 const waitFor = require('../src/utils/waitFor')
 const connectionBuilder = require('../src/cluster/connectionBuilder')
 const Connection = require('../src/network/connection')
+const defaultSocketFactory = require('../src/network/socketFactory')
+const socketFactory = defaultSocketFactory()
 
 const {
   createLogger,
@@ -14,15 +17,13 @@ const {
 } = require('../src/loggers')
 
 const LoggerConsole = require('../src/loggers/console')
-const Kafka = require('../src/index')
+const { Kafka } = require('../index')
 
-const isTravis = process.env.TRAVIS === 'true'
-const travisLevel = process.env.VERBOSE ? DEBUG : INFO
+const isCI = process.env.TF_BUILD === 'True'
+const ciLevel = process.env.VERBOSE ? DEBUG : INFO
 
 const newLogger = (opts = {}) =>
-  createLogger(
-    Object.assign({ level: isTravis ? travisLevel : NOTHING, logCreator: LoggerConsole }, opts)
-  )
+  createLogger(Object.assign({ level: isCI ? ciLevel : NOTHING, logCreator: LoggerConsole }, opts))
 
 const getHost = () => process.env.HOST_IP || ip.address()
 const secureRandom = (length = 10) =>
@@ -33,6 +34,7 @@ const sslBrokers = (host = getHost()) => [`${host}:9093`, `${host}:9096`, `${hos
 const saslBrokers = (host = getHost()) => [`${host}:9094`, `${host}:9097`, `${host}:9100`]
 
 const connectionOpts = (opts = {}) => ({
+  socketFactory,
   clientId: `test-${secureRandom()}`,
   connectionTimeout: 3000,
   logger: newLogger(),
@@ -86,6 +88,7 @@ const createConnection = (opts = {}) => new Connection(Object.assign(connectionO
 const createConnectionBuilder = (opts = {}, brokers = plainTextBrokers()) => {
   const { ssl, sasl, clientId } = Object.assign(connectionOpts(), opts)
   return connectionBuilder({
+    socketFactory,
     logger: newLogger(),
     brokers,
     ssl,
@@ -170,8 +173,7 @@ const addPartitions = async ({ topic, partitions }) => {
 }
 
 const testIfKafkaVersion = version => (description, callback, testFn = test) => {
-  const kafkaVersions = process.env.KAFKA_VERSION.split(/\s*,\s*/)
-  return kafkaVersions.includes(version)
+  return semver.gte(semver.coerce(process.env.KAFKA_VERSION), semver.coerce(version))
     ? testFn(description, callback)
     : test.skip(description, callback)
 }

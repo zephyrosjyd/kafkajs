@@ -315,7 +315,11 @@ describe('Consumer > Instrumentation Events', () => {
   })
 
   it('emits request timeout events', async () => {
-    cluster = createCluster({ instrumentationEmitter: emitter, requestTimeout: 1 })
+    cluster = createCluster({
+      instrumentationEmitter: emitter,
+      requestTimeout: 1,
+      enforceRequestTimeout: true,
+    })
     consumer = createConsumer({
       cluster,
       groupId,
@@ -388,6 +392,19 @@ describe('Consumer > Instrumentation Events', () => {
         .connect()
         .then(() => consumer.run({ eachMessage: () => true }))
         .catch(e => e),
+    ])
+
+    // add more concurrent requests to make we increate the requests
+    // on the queue
+    await Promise.all([
+      consumer.describeGroup(),
+      consumer.describeGroup(),
+      consumer.describeGroup(),
+      consumer.describeGroup(),
+      consumer2.describeGroup(),
+      consumer2.describeGroup(),
+      consumer2.describeGroup(),
+      consumer2.describeGroup(),
     ])
 
     await consumer2.disconnect()

@@ -36,12 +36,14 @@ module.exports = class Connection {
     host,
     port,
     logger,
+    socketFactory,
     rack = null,
     ssl = null,
     sasl = null,
     clientId = 'kafkajs',
     connectionTimeout = 1000,
     requestTimeout = 30000,
+    enforceRequestTimeout = false,
     maxInFlightRequests = null,
     instrumentationEmitter = null,
     retry = {},
@@ -53,6 +55,7 @@ module.exports = class Connection {
     this.broker = `${this.host}:${this.port}`
     this.logger = logger.namespace('Connection')
 
+    this.socketFactory = socketFactory
     this.ssl = ssl
     this.sasl = sasl
 
@@ -68,6 +71,7 @@ module.exports = class Connection {
       instrumentationEmitter,
       maxInFlightRequests,
       requestTimeout,
+      enforceRequestTimeout,
       clientId,
       broker: this.broker,
       logger: logger.namespace('RequestQueue'),
@@ -160,6 +164,7 @@ module.exports = class Connection {
       try {
         timeoutId = setTimeout(onTimeout, this.connectionTimeout)
         this.socket = createSocket({
+          socketFactory: this.socketFactory,
           host: this.host,
           port: this.port,
           ssl: this.ssl,

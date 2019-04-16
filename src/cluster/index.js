@@ -39,6 +39,7 @@ const mergeTopics = (obj, { topic, partitions }) => ({
 module.exports = class Cluster {
   constructor({
     logger: rootLogger,
+    socketFactory,
     brokers,
     ssl,
     sasl,
@@ -46,6 +47,7 @@ module.exports = class Cluster {
     connectionTimeout,
     authenticationTimeout,
     requestTimeout,
+    enforceRequestTimeout,
     metadataMaxAge,
     retry,
     allowExperimentalV011,
@@ -61,12 +63,14 @@ module.exports = class Cluster {
     this.connectionBuilder = connectionBuilder({
       logger: rootLogger,
       instrumentationEmitter,
+      socketFactory,
       brokers,
       ssl,
       sasl,
       clientId,
       connectionTimeout,
       requestTimeout,
+      enforceRequestTimeout,
       maxInFlightRequests,
       retry,
     })
@@ -119,6 +123,25 @@ module.exports = class Cluster {
    */
   async refreshMetadataIfNecessary() {
     await this.brokerPool.refreshMetadataIfNecessary(Array.from(this.targetTopics))
+  }
+
+  /**
+   * @public
+   * @returns {Promise<Metadata>}
+   */
+  async metadata({ topics = [] } = {}) {
+    return this.retrier(async (bail, retryCount, retryTime) => {
+      try {
+        await this.brokerPool.refreshMetadataIfNecessary(topics)
+        return this.brokerPool.withBroker(async ({ broker }) => broker.metadata(topics))
+      } catch (e) {
+        if (e.type === 'LEADER_NOT_AVAILABLE') {
+          throw e
+        }
+
+        bail(e)
+      }
+    })
   }
 
   /**

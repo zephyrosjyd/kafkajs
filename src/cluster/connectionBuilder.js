@@ -1,11 +1,13 @@
 const Connection = require('../network/connection')
 
 module.exports = ({
+  socketFactory,
   brokers,
   ssl,
   sasl,
   clientId,
   requestTimeout,
+  enforceRequestTimeout,
   connectionTimeout,
   maxInFlightRequests,
   retry,
@@ -31,8 +33,10 @@ module.exports = ({
         ssl,
         sasl,
         clientId,
+        socketFactory,
         connectionTimeout,
         requestTimeout,
+        enforceRequestTimeout,
         maxInFlightRequests,
         instrumentationEmitter,
         retry,
