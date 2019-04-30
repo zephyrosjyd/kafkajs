@@ -1,6 +1,5 @@
 const createProducer = require('../')
 const createConsumer = require('../../consumer')
-const sleep = require('../../utils/sleep')
 
 const {
   secureRandom,
@@ -8,9 +7,7 @@ const {
   createTopic,
   createModPartitioner,
   newLogger,
-  waitFor,
   waitForMessages,
-  testIfKafka_0_11,
   waitForConsumerToJoinGroup,
   generateMessages,
 } = require('testHelpers')
